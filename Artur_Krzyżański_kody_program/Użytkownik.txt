@@ -1,0 +1,57 @@
+
+package model;
+
+
+public class Uzytkownik {
+
+   private  int ID_uzytkownik;
+   private  String loin;
+   private  String haslo;
+   private  String rola;
+    
+       public Uzytkownik(int ID_uzytkownik, String loin, String haslo, String rola) {
+        this.ID_uzytkownik = ID_uzytkownik;
+        this.loin = loin;
+        this.haslo = haslo;
+        this.rola = rola;
+    }
+  
+    public void setID_uzytkownik(int ID_uzytkownik) {
+        this.ID_uzytkownik = ID_uzytkownik;
+    }
+
+    public void setLoin(String loin) {
+        this.loin = loin;
+    }
+
+    public void setHaslo(String haslo) {
+        this.haslo = haslo;
+    }
+
+    public void setRola(String rola) {
+        this.rola = rola;
+    }
+
+    public int getID_uzytkownik() {
+        return ID_uzytkownik;
+    }
+
+    public String getLoin() {
+        return loin;
+    }
+
+    public String getHaslo() {
+        return haslo;
+    }
+
+    public String getRola() {
+        return rola;
+    }
+
+    @Override
+    public String toString() {
+        return "Uzytkownik{" + "ID_uzytkownik=" + ID_uzytkownik + ", loin=" + loin + ", haslo=" + haslo + ", rola=" + rola + '}';
+    }
+
+ 
+}

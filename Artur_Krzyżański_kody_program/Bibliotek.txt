@@ -1,0 +1,327 @@
+
+package biblioteka;
+
+import java.sql.Connection;
+import java.sql.DriverManager;
+import java.sql.PreparedStatement;
+import java.sql.ResultSet;
+import java.sql.ResultSetMetaData;
+import java.sql.SQLException;
+import java.sql.Statement;
+import java.util.ArrayList;
+import model.Samochod;
+import model.Uzytkownik;
+import model.Zamowienie;
+
+/**
+ *
+ * Biblioteka to klasa odpowiadaj¹ca za logikê po³¹czenia z baz¹ daych.
+ * Zawarte s¹ w niej metody do tworzenia list obietów odpowiadaj¹cych tabel¹ z bazy.
+ */
+public class Biblioteka {
+    //sterowniki i nazwa bazy tworzona jest w katalogu projektu
+    public static final String DRIVER = "org.sqlite.JDBC";
+    public static final String DB_URL = "jdbc:sqlite:wypo.db";
+    //zmienne odpowiadaj¹ce po³¹czeniu i zapytaniom powi¹zanych z baz¹
+    private Connection conn;
+    private Statement stat;
+    
+    //Konstruktor 
+     public Biblioteka() {
+        try {
+            Class.forName(Biblioteka.DRIVER);
+        } catch (ClassNotFoundException e) {
+            System.err.println("Brak sterownika JDBC");
+            e.printStackTrace();
+        }
+
+        try {
+            conn = DriverManager.getConnection(DB_URL);
+            stat = conn.createStatement();
+        } catch (SQLException e) {
+            System.err.println("Problem z otwarciem polaczenia");
+            e.printStackTrace();
+        }
+
+        createTables();
+    }
+     
+     // fukcja tworz¹ca tabele w bazie
+     public boolean createTables()  {
+       
+        String createUzytkownicy = "CREATE TABLE `uzytkownik` ( `ID_uzytkownik` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `login` TEXT NOT NULL UNIQUE, `haslo` TEXT, `rola` TEXT NOT NULL )";
+        String createSamochody = "CREATE TABLE `samochod` ( `ID_samochod` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `marka` TEXT NOT NULL, `rok` TEXT NOT NULL, `cena` TEXT NOT NULL, `status` TEXT NOT NULL )";
+        String createZamowienia = "CREATE TABLE \"zamowienie\" ( `ID_zamowienie` INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT UNIQUE, `ID_samochod` INTEGER NOT NULL, `ID_uzytkownik` INTEGER NOT NULL, `data_start` TEXT NOT NULL, `data_stop` TEXT NOT NULL, `status` TEXT NOT NULL, FOREIGN KEY(`ID_samochod`) REFERENCES `samochod`, FOREIGN KEY(`ID_uzytkownik`) REFERENCES `uzytkownik` )";
+       
+        
+        try {
+            stat.execute(createUzytkownicy);
+            stat.execute(createSamochody);
+            stat.execute(createZamowienia);
+        } catch (SQLException e) {
+            ;
+            System.out.println("Tabela ju¿ istnieje badŸ nie ma uprawnieñ do zapisu.");
+           // e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+// Wstawienie u¿ytkownika do bazy
+    public boolean insertUzytkownik(String login, String haslo, String rola) {
+        try {
+            PreparedStatement prepStmt = conn.prepareStatement(
+                    "insert into uzytkownik values (NULL, ?, ?, ?);");
+            prepStmt.setString(1, login);
+            prepStmt.setString(2, haslo);
+            prepStmt.setString(3, rola);
+            prepStmt.execute();
+        } catch (SQLException e) {
+            if(e.getErrorCode()==19)
+            System.out.println("Nazwa u¿ytkownika zajêta");
+            //System.out.println(e.getMessage());
+           // e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+    //--------------------------------------------
+    //sprawdza czy u¿ytkownik o danym niku i haœle istnieje (okno logowania)
+        public boolean checkUzytkownik(String login, String haslo) {
+       ResultSet result;
+        try {
+            //System.out.println("loin: "+login+"   haslo "+haslo);
+             result = stat.executeQuery("SELECT * FROM uzytkownik Where login='"+login+"' and haslo='"+haslo+"'");
+                 if (!result.next()) {
+                   // System.out.println("empty");
+                    return false;
+                  } else {
+                  // System.out.println("mam");
+                   return true;
+                  }   
+             
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+           // e.printStackTrace();
+         //  System.out.println("error");
+            return false;
+        }
+      
+    }
+        
+        //------------------------
+        //sprawdza czy u¿ytkownik o danym niku i haœle istnieje (edycja konta)
+       public boolean checkUzytkownik(String login) {
+       ResultSet result;
+        try {
+            //System.out.println("loin: "+login+"   haslo "+haslo);
+             result = stat.executeQuery("SELECT * FROM uzytkownik Where login='"+login+"'");
+                 if (!result.next()) {
+                   // System.out.println("empty");
+                    return false;
+                  } else {
+                  // System.out.println("mam");
+                   return true;
+                  }   
+             
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+           // e.printStackTrace();
+         //  System.out.println("error");
+            return false;
+        }
+      
+    }
+     //--------------------------------------------------------- 
+       //pobiera u¿ytkownika z bazy(logowanie, i edycja)
+    public Uzytkownik selectUzytkownik(String login, String haslo) {
+        Uzytkownik uzytkownik;
+        try {
+            ResultSet result = stat.executeQuery("SELECT * FROM uzytkownik Where login='"+login+"' and haslo='"+haslo+"'");
+          
+            int id;
+            String log, rola, has;
+            
+                id = result.getInt("ID_uzytkownik");
+                log = result.getString("login");    
+                has = result.getString("haslo"); 
+                rola = result.getString("rola");
+                uzytkownik = new Uzytkownik(id, log, has, rola);
+            
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+           // e.printStackTrace();
+            return null;
+        }
+        return uzytkownik;
+    }
+    //-----------------------------------------------
+    //edycja u¿ytkownika w bazie
+     public void updateUzytkownik(String id, String login, String haslo, String rola) throws SQLException {
+       
+           stat.executeUpdate("UPDATE uzytkownik SET "
+                    + "login = '"+login+"', haslo='"+haslo+"' , rola='"+rola+"' WHERE ID_uzytkownik ="+ id);
+            
+       
+    }
+    
+    //+++++++++++++++++++++++++++++++++++++++++++
+     //wstawienie samochodu do tabeli
+     public boolean insertSamochod(String marka, String rok, String cena, String status) {
+        try {
+            PreparedStatement prepStmt = conn.prepareStatement(
+                    "insert into samochod values (NULL, ?, ?, ?, ?);");
+            prepStmt.setString(1, marka);
+            prepStmt.setString(2, rok);
+            prepStmt.setString(3, cena);
+            prepStmt.setString(4, status);
+            prepStmt.execute();
+        } catch (SQLException e) {
+            System.err.println("Blad przy Wprowadzniu Samochód");
+            return false;
+        }
+        return true;
+    }
+     //-------------------------------------------
+     //tworzy listê wszystkich u¿ytkowników
+       public ArrayList<Uzytkownik> selectuzytkownicy() {
+        ArrayList<Uzytkownik> uzytkownicy = new ArrayList<>();
+
+        try {
+            ResultSet result = stat.executeQuery("select * from uzytkownik");
+            int ID_uzytkownik;
+            String login, haslo, rola;
+            while(result.next()) {
+                ID_uzytkownik = result.getInt("ID_uzytkownik");
+                login = result.getString("login");
+                haslo = result.getString("haslo");
+                rola = result.getString("rola");
+               
+                Uzytkownik u=new Uzytkownik(ID_uzytkownik, login, haslo, rola);
+                uzytkownicy.add(u);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return uzytkownicy;
+    }
+    //------------------------------------------------------
+     //tworzy listê wszystkich samochodów
+        public ArrayList<Samochod> selectSamochody() {
+        ArrayList<Samochod> samochody = new ArrayList<>();
+
+        try {
+            ResultSet result = stat.executeQuery("select * from samochod ORDER BY CASE status WHEN 'wolny' THEN 0 WHEN 'zarezerwowany' THEN 1 WHEN 'wypozyczony' THEN 2 END");
+            int ID_samochod;
+            String marka, rok, cena, status;
+            while(result.next()) {
+                ID_samochod = result.getInt("ID_samochod");
+                marka = result.getString("marka");
+                rok = result.getString("rok");
+                cena = result.getString("cena");
+                status = result.getString("status");
+                Samochod s=new Samochod(ID_samochod, marka, rok, cena, status);
+                samochody.add(s);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return samochody;
+    }
+        
+        //-----------------------------
+        //Edycja samochodów przeci¹¿one funkcje u¿ywane zale¿nie od potrzeby
+    public void updateSamochod(String id) throws SQLException {
+       
+            stat.executeUpdate("UPDATE samochod SET status = 'zarezerwowany' WHERE ID_samochod ="+ id);
+       
+    }
+    public void updateSamochod(String id, String status) throws SQLException {
+       
+            stat.executeUpdate("UPDATE samochod SET status = '"+status+"' WHERE ID_samochod ="+ id);
+       
+    }
+    public void updateSamochod(String id, String marka, String rok, String cena, String status) throws SQLException {
+       
+            stat.executeUpdate("UPDATE samochod SET status = '"+status+"', marka='"+marka+"', rok='"+rok+"',cena='"+cena+"' WHERE ID_samochod ="+ id);
+       
+    }
+    //funkcja usuwaj¹ca samochód z tabeli
+    public void deleteSamochod(String id) throws SQLException {
+       
+            stat.executeUpdate("DELETE FROM samochod WHERE ID_samochod ="+ id);
+       
+    }
+     //+++++++++++++++++++++++++++++++++++++++++++++++++++++
+    //wstawia zamówienie do tabeli
+       public boolean insertZamowienie( int ID_samochod, int ID_uzytkownik, String data_start, String data_stop, String status) {
+        try {
+            PreparedStatement prepStmt = conn.prepareStatement(
+                    "insert into zamowienie values (NULL, ?, ?, ?, ?, ?);");
+            prepStmt.setString(1, String.valueOf(ID_samochod));
+            prepStmt.setString(2, String.valueOf(ID_uzytkownik));
+            prepStmt.setString(3, data_start);
+            prepStmt.setString(4, data_stop);
+            prepStmt.setString(5, status);
+            
+            prepStmt.execute();
+        } catch (SQLException e) {
+            System.err.println("Blad przy Wprowadzniu zamówienia");
+            e.printStackTrace();
+            return false;
+        }
+        return true;
+    }
+       
+    //-------------------------------------------------
+       //tworzy listê wszystkich zamówieñ
+    public ArrayList<Zamowienie> selectZamowienia() {
+        ArrayList<Zamowienie> zamowienia = new ArrayList<>();
+
+        try {
+            ResultSet result = stat.executeQuery("select * from zamowienie");
+            int ID_samochod,ID_uzytkownik, ID_zamowienie;
+            String data_start, data_stop, status;
+            while(result.next()) {
+                ID_samochod = result.getInt("ID_samochod");
+                ID_uzytkownik = result.getInt("ID_uzytkownik");
+                ID_zamowienie = result.getInt("ID_zamowienie");
+                data_start = result.getString("data_start");
+                data_stop = result.getString("data_stop");
+                status = result.getString("status");
+                Zamowienie z=new Zamowienie(ID_zamowienie, ID_samochod, ID_uzytkownik, data_start, data_stop, status);
+                zamowienia.add(z);
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return null;
+        }
+        return zamowienia;
+    }
+    
+    //-------------------------------------------
+    //edytuje zamówienie
+ public void updateZamowieie(String id,  String status) throws SQLException {
+       
+           stat.executeUpdate("UPDATE zamowienie SET "
+                    + "status = '"+status+"' WHERE ID_zamowienie ="+ id);
+            
+       
+    }
+       
+       //++++++++++++++++++++++++++++
+
+    //zamyka po³¹czenie z baz¹
+      public void closeConnection() {
+        try {
+            conn.close();
+        } catch (SQLException e) {
+            System.err.println("Problem z zamknieciem polaczenia");
+            e.printStackTrace();
+        }
+    }
+    
+    
+    
+}

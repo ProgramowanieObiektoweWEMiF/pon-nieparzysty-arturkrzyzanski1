@@ -1,0 +1,79 @@
+
+package model;
+
+
+public class Zamowienie {
+    private int ID_zamowienie;
+    private int ID_samochod;
+    private int ID_uzytkownik;
+    private String data_start;
+    private String data_stop;
+    private String status;
+
+    public Zamowienie(int ID_zamowienie, int ID_samochod, int ID_uzytkownik, String data_start, String data_stop, String status) {
+        this.ID_zamowienie = ID_zamowienie;
+        this.ID_samochod = ID_samochod;
+        this.ID_uzytkownik = ID_uzytkownik;
+        this.data_start = data_start;
+        this.data_stop = data_stop;
+        this.status = status;
+    }
+
+    public int getID_zamowienie() {
+        return ID_zamowienie;
+    }
+
+    public int getID_samochod() {
+        return ID_samochod;
+    }
+
+    public int getID_uzytkownik() {
+        return ID_uzytkownik;
+    }
+
+    public String getData_start() {
+        return data_start;
+    }
+
+    public String getData_stop() {
+        return data_stop;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+
+    public void setID_zamowienie(int ID_zamowienie) {
+        this.ID_zamowienie = ID_zamowienie;
+    }
+
+    public void setID_samochod(int ID_samochod) {
+        this.ID_samochod = ID_samochod;
+    }
+
+    public void setID_uzytkownik(int ID_uzytkownik) {
+        this.ID_uzytkownik = ID_uzytkownik;
+    }
+
+    public void setData_start(String data_start) {
+        this.data_start = data_start;
+    }
+
+    public void setData_stop(String data_stop) {
+        this.data_stop = data_stop;
+    }
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    @Override
+    public String toString() {
+        return "Zamowienie{" + "ID_zamowienie=" + ID_zamowienie + ", ID_samochod=" + ID_samochod + ", ID_uzytkownik=" + ID_uzytkownik + ", data_start=" + data_start + ", data_stop=" + data_stop + ", status=" + status + '}';
+    }
+ 
+
+   
+
+   
+}

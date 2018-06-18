@@ -1,0 +1,70 @@
+
+package model;
+
+
+public class Samochod {
+
+   private  int ID_samochod;
+   private  String marka;
+   private  String rok;
+   private  String cena;
+   private  String status;
+
+    public void setStatus(String status) {
+        this.status = status;
+    }
+
+    public String getStatus() {
+        return status;
+    }
+    
+        public Samochod(int ID_samochod, String marka, String rok, String cena, String status) {
+        this.ID_samochod = ID_samochod;
+        this.marka = marka;
+        this.rok = rok;
+        this.cena = cena;
+        this.status = status;
+    }
+   
+    
+    public void setID_samochod(int ID_samochod) {
+        this.ID_samochod = ID_samochod;
+    }
+
+    public void setMarka(String marka) {
+        this.marka = marka;
+    }
+
+    public void setRok(String rok) {
+        this.rok = rok;
+    }
+
+    public void setCena(String cena) {
+        this.cena = cena;
+    }
+
+    public int getID_samochod() {
+        return ID_samochod;
+    }
+
+    public String getMarka() {
+        return marka;
+    }
+
+    public String getRok() {
+        return rok;
+    }
+
+    public String getCena() {
+        return cena;
+    }
+
+    @Override
+    public String toString() {
+        return "ID_samochod= " + ID_samochod + ",\nmarka= " + marka + ",\nrok= " + rok + ",\ncena= " + cena + ",\nstatus= " + status +"\n";
+    }
+
+
+
+
+}
